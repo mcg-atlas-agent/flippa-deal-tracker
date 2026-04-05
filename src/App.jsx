@@ -103,16 +103,27 @@ function App() {
   }
 
   function getDisplayTitle(deal) {
-    // Priority: business_name > property_name > title (truncated) > generic fallback
-    if (deal.business_name && deal.business_name !== 'Sign NDA to view more details →') {
+    // Helper function to check if a field has meaningful data
+    const isValidTitle = (text) => {
+      if (!text) return false
+      const lowerText = text.toLowerCase().trim()
+      // Reject if it contains "sign nda" or common placeholder text
+      if (lowerText.includes('sign nda') || lowerText.includes('view more details')) return false
+      // Reject if too short (less than 3 chars)
+      if (text.trim().length < 3) return false
+      return true
+    }
+
+    // Priority: title > business_name > property_name > generic fallback
+    // Changed priority since title has the best data in your database
+    if (isValidTitle(deal.title)) {
+      return deal.title.length > 80 ? deal.title.substring(0, 80) + '...' : deal.title
+    }
+    if (isValidTitle(deal.business_name)) {
       return deal.business_name
     }
-    if (deal.property_name && deal.property_name !== 'Sign NDA to view more details →') {
+    if (isValidTitle(deal.property_name)) {
       return deal.property_name
-    }
-    if (deal.title) {
-      // Use first 60 chars of title as summary
-      return deal.title.length > 60 ? deal.title.substring(0, 60) + '...' : deal.title
     }
     return 'Confidential Business Listing'
   }
