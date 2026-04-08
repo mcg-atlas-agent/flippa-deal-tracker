@@ -5,8 +5,8 @@ import toast from 'react-hot-toast'
 import { FiArrowLeft, FiExternalLink, FiDollarSign, FiTrendingUp, FiCalendar } from 'react-icons/fi'
 
 const supabase = createClient(
-  'https://jpcpngckvxttmnczwyfh.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwY3BuZ2Nrdnh0dG1uY3p3eWZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MTY3MjcsImV4cCI6MjA1ODk5MjcyN30.sYeY2IUQl9BFfLsOmjUO0hI0EKKTVGaJuBHEf4qGOEQ'
+  'https://wjlvkixydrormgnvxdrm.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbHZraXh5ZHJvcm1nbnZ4ZHJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1ODIyNDUsImV4cCI6MjA4ODE1ODI0NX0.A0dzsJPpQFDz0ZXUK6TWaG4bgu8PBW0x2txoqwbnXYg'
 )
 
 function DealDetail() {

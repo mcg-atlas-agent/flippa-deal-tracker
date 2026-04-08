@@ -5,7 +5,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import { FiDollarSign, FiTrendingUp, FiCheckCircle, FiXCircle, FiClock, FiCopy, FiExternalLink, FiThumbsUp, FiThumbsDown, FiMessageSquare, FiArrowRight } from 'react-icons/fi'
 
 const supabase = createClient(
-  'https://wjlvkixydrormnvxdrm.supabase.co',
+  'https://wjlvkixydrormgnvxdrm.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbHZraXh5ZHJvcm1nbnZ4ZHJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1ODIyNDUsImV4cCI6MjA4ODE1ODI0NX0.A0dzsJPpQFDz0ZXUK6TWaG4bgu8PBW0x2txoqwbnXYg'
 )
 
