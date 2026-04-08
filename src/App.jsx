@@ -137,7 +137,7 @@ function App() {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-slate-800 mb-2">Mattoo Capital Group</h1>
           <p className="text-slate-600">Flippa Deal Pipeline</p>
-          <p className="text-xs text-slate-400 mt-1">v2.0 - Fixed Title Display</p>
+          <p className="text-xs text-slate-400 mt-1">v2.1 - Clickable Deal Titles + Detail Pages</p>
         </div>
 
         {/* Filter Tabs */}
