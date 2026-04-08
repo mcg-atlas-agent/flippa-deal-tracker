@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { createClient } from '@supabase/supabase-js'
 import toast from 'react-hot-toast'
-import { FiArrowLeft, FiExternalLink, FiDollarSign, FiTrending Up, FiCalendar, FiAlertTriangle } from 'react-icons/fi'
+import { FiArrowLeft, FiExternalLink, FiDollarSign, FiTrendingUp, FiCalendar, FiAlertTriangle } from 'react-icons/fi'
 
 const supabase = createClient(
   'https://wjlvkixydrormgnvxdrm.supabase.co',
