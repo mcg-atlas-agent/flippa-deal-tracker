@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { createClient } from '@supabase/supabase-js'
 import toast, { Toaster } from 'react-hot-toast'
-import { FiDollarSign, FiTrendingUp, FiCheckCircle, FiXCircle, FiClock, FiCopy, FiExternalLink, FiThumbsUp, FiThumbsDown, FiMessageSquare } from 'react-icons/fi'
+import { FiDollarSign, FiTrendingUp, FiCheckCircle, FiXCircle, FiClock, FiCopy, FiExternalLink, FiThumbsUp, FiThumbsDown, FiMessageSquare, FiArrowRight } from 'react-icons/fi'
 
 const supabase = createClient(
   'https://wjlvkixydrormnvxdrm.supabase.co',
@@ -9,6 +10,7 @@ const supabase = createClient(
 )
 
 function App() {
+  const navigate = useNavigate()
   const [deals, setDeals] = useState([])
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
@@ -130,8 +132,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <Toaster position="top-right" />
-      
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="text-center mb-8">
@@ -224,8 +224,12 @@ function App() {
                 {/* Deal Header */}
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-slate-800 mb-2">
+                    <h3 
+                      onClick={() => navigate(`/deal/${deal.deal_id}`)}
+                      className="text-xl font-bold text-slate-800 mb-2 cursor-pointer hover:text-blue-600 transition-colors flex items-center gap-2 group"
+                    >
                       {getDisplayTitle(deal)}
+                      <FiArrowRight className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-500" />
                     </h3>
                     {deal.status && (
                       <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${

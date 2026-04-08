@@ -1,10 +1,19 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 import App from './App'
+import DealDetail from './DealDetail'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <Toaster position="top-right" />
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="/deal/:dealId" element={<DealDetail />} />
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>,
 )
