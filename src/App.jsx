@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { createClient } from '@supabase/supabase-js'
 import toast, { Toaster } from 'react-hot-toast'
-import { FiDollarSign, FiTrendingUp, FiCheckCircle, FiXCircle, FiClock, FiCopy, FiExternalLink, FiThumbsUp, FiThumbsDown, FiMessageSquare, FiArrowRight } from 'react-icons/fi'
+import { FiExternalLink } from 'react-icons/fi'
 
 const supabase = createClient(
   'https://wjlvkixydrormgnvxdrm.supabase.co',
@@ -62,15 +62,6 @@ function App() {
     }
   }
 
-  function copyMessage(deal) {
-    if (deal.seller_message) {
-      navigator.clipboard.writeText(deal.seller_message)
-      toast.success('Message copied!')
-    } else {
-      toast.error('No message available')
-    }
-  }
-
   const filteredDeals = deals.filter(deal => {
     if (filter === 'all') return true
     if (filter === 'interested') return deal.status === 'interested'
@@ -92,24 +83,24 @@ function App() {
     <div style={{ minHeight: '100vh', background: '#f8f9fa', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <Toaster position="top-right" />
       
-      {/* Compact Header */}
+      {/* Header */}
       <div style={{ 
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
         padding: '16px 24px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
       }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <h1 style={{ margin: 0, fontSize: '24px', color: 'white', fontWeight: 600 }}>
                 Mattoo Capital Group
               </h1>
               <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>
-                Flippa Deal Pipeline • v2.1 - Clickable Deal Titles + Detail Pages
+                Flippa Deal Pipeline • v2.2 - Fixed Table Alignment
               </p>
             </div>
             
-            {/* Compact Stats */}
+            {/* Stats */}
             <div style={{ display: 'flex', gap: '24px', color: 'white', fontSize: '13px' }}>
               <div>
                 <div style={{ opacity: 0.8 }}>Total Deals</div>
@@ -130,13 +121,13 @@ function App() {
             </div>
           </div>
           
-          {/* Compact Filter Tabs */}
+          {/* Filter Tabs */}
           <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
             {[
-              { key: 'all', label: `📊 All Deals ${stats.total}`, count: stats.total },
-              { key: 'interested', label: `👍 Interested ${stats.interested}`, count: stats.interested },
-              { key: 'passed', label: `👎 Passed ${stats.passed}`, count: stats.passed },
-              { key: 'pending', label: `⏳ Pending Review ${stats.pending}`, count: stats.pending }
+              { key: 'all', label: `📊 All Deals ${stats.total}` },
+              { key: 'interested', label: `👍 Interested ${stats.interested}` },
+              { key: 'passed', label: `👎 Passed ${stats.passed}` },
+              { key: 'pending', label: `⏳ Pending Review ${stats.pending}` }
             ].map(tab => (
               <button
                 key={tab.key}
@@ -160,210 +151,222 @@ function App() {
         </div>
       </div>
 
-      {/* Compact Table-style Deal List */}
-      <div style={{ maxWidth: '1400px', margin: '20px auto', padding: '0 24px' }}>
+      {/* Table */}
+      <div style={{ maxWidth: '1600px', margin: '20px auto', padding: '0 24px' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>Loading deals...</div>
         ) : (
-          <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-            {/* Table Header */}
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: '2fr 100px 110px 100px 90px 80px 200px 140px',
-              gap: '12px',
-              padding: '12px 16px',
-              background: '#f8f9fa',
-              borderBottom: '1px solid #e9ecef',
-              fontSize: '11px',
-              fontWeight: 600,
-              color: '#495057',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
-              <div>Business</div>
-              <div style={{ textAlign: 'right' }}>Price</div>
-              <div style={{ textAlign: 'right' }}>Revenue/mo</div>
-              <div style={{ textAlign: 'right' }}>Profit/mo</div>
-              <div style={{ textAlign: 'right' }}>Margin</div>
-              <div>Age</div>
-              <div>Location</div>
-              <div>Actions</div>
-            </div>
-
-            {/* Table Rows */}
-            {filteredDeals.map((deal, idx) => {
-              const margin = deal.monthly_revenue > 0 
-                ? ((deal.monthly_profit / deal.monthly_revenue) * 100).toFixed(0) 
-                : 0
-              const displayTitle = deal.title || deal.business_name || 'Confidential Listing'
-              const statusBadge = deal.status === 'interested' ? '✅' : 
-                                 deal.status === 'passed' ? '❌' : 
-                                 deal.status === 'nda_signed' ? '📝' : '🆕'
-              
-              return (
-                <div 
-                  key={deal.deal_id}
-                  style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '2fr 100px 110px 100px 90px 80px 200px 140px',
-                    gap: '12px',
-                    padding: '12px 16px',
-                    borderBottom: idx < filteredDeals.length - 1 ? '1px solid #f1f3f5' : 'none',
-                    fontSize: '13px',
-                    alignItems: 'center',
-                    transition: 'background 0.15s',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#f8f9fa'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
-                >
-                  {/* Business Name */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '16px' }}>{statusBadge}</span>
-                    <Link 
-                      to={`/deal/${deal.deal_id}`}
+          <div style={{ background: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #e9ecef' }}>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: '#495057', textTransform: 'uppercase', letterSpacing: '0.5px', width: '35%', minWidth: '300px' }}>
+                    Business
+                  </th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: 600, color: '#495057', textTransform: 'uppercase', letterSpacing: '0.5px', width: '90px' }}>
+                    Price
+                  </th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: 600, color: '#495057', textTransform: 'uppercase', letterSpacing: '0.5px', width: '100px' }}>
+                    Revenue/mo
+                  </th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: 600, color: '#495057', textTransform: 'uppercase', letterSpacing: '0.5px', width: '90px' }}>
+                    Profit/mo
+                  </th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: 600, color: '#495057', textTransform: 'uppercase', letterSpacing: '0.5px', width: '70px' }}>
+                    Margin
+                  </th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: '#495057', textTransform: 'uppercase', letterSpacing: '0.5px', width: '60px' }}>
+                    Age
+                  </th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: '#495057', textTransform: 'uppercase', letterSpacing: '0.5px', width: '150px' }}>
+                    Location
+                  </th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '11px', fontWeight: 600, color: '#495057', textTransform: 'uppercase', letterSpacing: '0.5px', width: '130px' }}>
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredDeals.map((deal, idx) => {
+                  const margin = deal.monthly_revenue > 0 
+                    ? ((deal.monthly_profit / deal.monthly_revenue) * 100).toFixed(0) 
+                    : 0
+                  const displayTitle = deal.title || deal.business_name || 'Confidential Listing'
+                  const statusBadge = deal.status === 'interested' ? '✅' : 
+                                     deal.status === 'passed' ? '❌' : 
+                                     deal.status === 'nda_signed' ? '📝' : '🆕'
+                  
+                  return (
+                    <tr 
+                      key={deal.deal_id}
                       style={{ 
-                        color: '#495057',
-                        textDecoration: 'none',
+                        borderBottom: '1px solid #f1f3f5',
+                        transition: 'background 0.15s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f8f9fa'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+                    >
+                      {/* Business Name */}
+                      <td style={{ padding: '12px 16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '16px', flexShrink: 0 }}>{statusBadge}</span>
+                          <Link 
+                            to={`/deal/${deal.deal_id}`}
+                            style={{ 
+                              color: '#495057',
+                              textDecoration: 'none',
+                              fontWeight: 500,
+                              fontSize: '13px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              lineHeight: '1.4'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.color = '#667eea'}
+                            onMouseLeave={(e) => e.currentTarget.style.color = '#495057'}
+                          >
+                            {displayTitle}
+                          </Link>
+                        </div>
+                      </td>
+
+                      {/* Price */}
+                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 500, fontSize: '13px', whiteSpace: 'nowrap' }}>
+                        ${(deal.asking_price/1000).toFixed(0)}K
+                      </td>
+
+                      {/* Revenue */}
+                      <td style={{ padding: '12px 16px', textAlign: 'right', color: '#0ca678', fontSize: '13px', whiteSpace: 'nowrap' }}>
+                        ${(deal.monthly_revenue/1000).toFixed(0)}K
+                      </td>
+
+                      {/* Profit */}
+                      <td style={{ padding: '12px 16px', textAlign: 'right', color: '#667eea', fontWeight: 500, fontSize: '13px', whiteSpace: 'nowrap' }}>
+                        ${(deal.monthly_profit/1000).toFixed(0)}K
+                      </td>
+
+                      {/* Margin */}
+                      <td style={{ 
+                        padding: '12px 16px',
+                        textAlign: 'right',
+                        color: margin > 30 ? '#0ca678' : margin > 15 ? '#ff8c42' : '#dc3545',
                         fontWeight: 500,
+                        fontSize: '13px',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {margin}%
+                      </td>
+
+                      {/* Age */}
+                      <td style={{ padding: '12px 16px', color: '#6c757d', fontSize: '13px', whiteSpace: 'nowrap' }}>
+                        {deal.business_age}y
+                      </td>
+
+                      {/* Location */}
+                      <td style={{ 
+                        padding: '12px 16px',
+                        fontSize: '12px',
+                        color: '#6c757d',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
-                        flex: 1
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = '#667eea'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = '#495057'}
-                    >
-                      {displayTitle}
-                    </Link>
-                  </div>
+                        maxWidth: '150px'
+                      }}>
+                        {deal.location}
+                      </td>
 
-                  {/* Price */}
-                  <div style={{ textAlign: 'right', fontWeight: 500 }}>
-                    ${(deal.asking_price/1000).toFixed(0)}K
-                  </div>
-
-                  {/* Revenue */}
-                  <div style={{ textAlign: 'right', color: '#0ca678' }}>
-                    ${(deal.monthly_revenue/1000).toFixed(0)}K
-                  </div>
-
-                  {/* Profit */}
-                  <div style={{ textAlign: 'right', color: '#667eea', fontWeight: 500 }}>
-                    ${(deal.monthly_profit/1000).toFixed(0)}K
-                  </div>
-
-                  {/* Margin */}
-                  <div style={{ 
-                    textAlign: 'right',
-                    color: margin > 30 ? '#0ca678' : margin > 15 ? '#ff8c42' : '#dc3545',
-                    fontWeight: 500
-                  }}>
-                    {margin}%
-                  </div>
-
-                  {/* Age */}
-                  <div style={{ color: '#6c757d' }}>
-                    {deal.business_age}y
-                  </div>
-
-                  {/* Location */}
-                  <div style={{ 
-                    fontSize: '12px',
-                    color: '#6c757d',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {deal.location}
-                  </div>
-
-                  {/* Actions */}
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    {deal.status !== 'interested' && deal.status !== 'passed' && (
-                      <>
-                        <button
-                          onClick={() => updateDealStatus(deal.deal_id, 'interested')}
-                          style={{
-                            padding: '4px 10px',
-                            border: '1px solid #0ca678',
-                            borderRadius: '4px',
-                            background: 'white',
-                            color: '#0ca678',
-                            fontSize: '11px',
-                            fontWeight: 500,
-                            cursor: 'pointer',
-                            transition: 'all 0.15s'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#0ca678'
-                            e.currentTarget.style.color = 'white'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'white'
-                            e.currentTarget.style.color = '#0ca678'
-                          }}
-                        >
-                          👍
-                        </button>
-                        <button
-                          onClick={() => updateDealStatus(deal.deal_id, 'passed')}
-                          style={{
-                            padding: '4px 10px',
-                            border: '1px solid #dc3545',
-                            borderRadius: '4px',
-                            background: 'white',
-                            color: '#dc3545',
-                            fontSize: '11px',
-                            fontWeight: 500,
-                            cursor: 'pointer',
-                            transition: 'all 0.15s'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#dc3545'
-                            e.currentTarget.style.color = 'white'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'white'
-                            e.currentTarget.style.color = '#dc3545'
-                          }}
-                        >
-                          👎
-                        </button>
-                      </>
-                    )}
-                    <a
-                      href={deal.flippa_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        padding: '4px 8px',
-                        border: '1px solid #dee2e6',
-                        borderRadius: '4px',
-                        background: 'white',
-                        color: '#6c757d',
-                        fontSize: '11px',
-                        textDecoration: 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        transition: 'all 0.15s'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = '#667eea'
-                        e.currentTarget.style.color = '#667eea'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = '#dee2e6'
-                        e.currentTarget.style.color = '#6c757d'
-                      }}
-                    >
-                      <FiExternalLink size={12} />
-                    </a>
-                  </div>
-                </div>
-              )
-            })}
+                      {/* Actions */}
+                      <td style={{ padding: '12px 16px' }}>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
+                          {deal.status !== 'interested' && deal.status !== 'passed' && (
+                            <>
+                              <button
+                                onClick={() => updateDealStatus(deal.deal_id, 'interested')}
+                                title="Mark as Interested"
+                                style={{
+                                  padding: '6px 12px',
+                                  border: '1px solid #0ca678',
+                                  borderRadius: '4px',
+                                  background: 'white',
+                                  color: '#0ca678',
+                                  fontSize: '14px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.15s'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = '#0ca678'
+                                  e.currentTarget.style.color = 'white'
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'white'
+                                  e.currentTarget.style.color = '#0ca678'
+                                }}
+                              >
+                                👍
+                              </button>
+                              <button
+                                onClick={() => updateDealStatus(deal.deal_id, 'passed')}
+                                title="Mark as Passed"
+                                style={{
+                                  padding: '6px 12px',
+                                  border: '1px solid #dc3545',
+                                  borderRadius: '4px',
+                                  background: 'white',
+                                  color: '#dc3545',
+                                  fontSize: '14px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.15s'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = '#dc3545'
+                                  e.currentTarget.style.color = 'white'
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'white'
+                                  e.currentTarget.style.color = '#dc3545'
+                                }}
+                              >
+                                👎
+                              </button>
+                            </>
+                          )}
+                          <a
+                            href={deal.flippa_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="View on Flippa"
+                            style={{
+                              padding: '6px 10px',
+                              border: '1px solid #dee2e6',
+                              borderRadius: '4px',
+                              background: 'white',
+                              color: '#6c757d',
+                              fontSize: '12px',
+                              textDecoration: 'none',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              transition: 'all 0.15s'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = '#667eea'
+                              e.currentTarget.style.color = '#667eea'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = '#dee2e6'
+                              e.currentTarget.style.color = '#6c757d'
+                            }}
+                          >
+                            <FiExternalLink size={14} />
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
