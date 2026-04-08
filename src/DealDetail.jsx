@@ -2,12 +2,88 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { createClient } from '@supabase/supabase-js'
 import toast from 'react-hot-toast'
-import { FiArrowLeft, FiExternalLink, FiDollarSign, FiTrendingUp, FiCalendar } from 'react-icons/fi'
+import { FiArrowLeft, FiExternalLink, FiDollarSign, FiTrending Up, FiCalendar, FiAlertTriangle } from 'react-icons/fi'
 
 const supabase = createClient(
   'https://wjlvkixydrormgnvxdrm.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbHZraXh5ZHJvcm1nbnZ4ZHJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1ODIyNDUsImV4cCI6MjA4ODE1ODI0NX0.A0dzsJPpQFDz0ZXUK6TWaG4bgu8PBW0x2txoqwbnXYg'
 )
+
+// Sample P&L data for jewelry business (deal_id 12624426)
+const SAMPLE_PNL = {
+  '12624426': [
+    { month: 'Apr 2025', revenue: 711086, expenses: 539728, profit: 171358 },
+    { month: 'May 2025', revenue: 390947, expenses: 299879, profit: 91068 },
+    { month: 'Jun 2025', revenue: 254313, expenses: 198527, profit: 55786 },
+    { month: 'Jul 2025', revenue: 315418, expenses: 248274, profit: 67144 },
+    { month: 'Aug 2025', revenue: 262832, expenses: 214899, profit: 47933 },
+    { month: 'Sep 2025', revenue: 190847, expenses: 165753, profit: 25094 },
+    { month: 'Oct 2025', revenue: 172427, expenses: 160157, profit: 12270 },
+    { month: 'Nov 2025', revenue: 115161, expenses: 94764, profit: 20397 },
+    { month: 'Dec 2025', revenue: 246722, expenses: 192104, profit: 54618 },
+    { month: 'Jan 2026', revenue: 339509, expenses: 294477, profit: 45032 },
+    { month: 'Feb 2026', revenue: 257737, expenses: 235202, profit: 22535 },
+    { month: 'Mar 2026', revenue: 197978, expenses: 175119, profit: 22859 }
+  ]
+}
+
+const SAMPLE_RISKS = {
+  '12624426': [
+    {
+      severity: 'HIGH',
+      title: 'Severe Revenue Decline',
+      description: 'Revenue declined 37.4% from first half to second half of the year',
+      questions: [
+        'What caused the significant drop in sales starting in June 2025?',
+        'Has there been a change in marketing strategy or ad spend?',
+        'Were there any platform changes (iOS14, Meta policy changes)?',
+        'Is this seasonality or a permanent trend?'
+      ]
+    },
+    {
+      severity: 'HIGH',
+      title: 'Extreme Revenue Volatility',
+      description: 'Revenue swings by 207% between peak and trough months',
+      questions: [
+        'What explains the massive revenue spike in April 2025?',
+        'Was April a one-time viral campaign or sustainable?',
+        'Can the business replicate April performance?',
+        'Is the business dependent on unpredictable viral moments?'
+      ]
+    },
+    {
+      severity: 'MEDIUM',
+      title: 'Eroding Profit Margins',
+      description: 'Profit margins have declined from ~23.1% to ~11.2%',
+      questions: [
+        'Have COGS increased due to supplier price hikes?',
+        'Has customer acquisition cost (CAC) increased?',
+        'Are there increasing returns/refunds?',
+        'What is causing expense growth relative to revenue?'
+      ]
+    },
+    {
+      severity: 'MEDIUM',
+      title: 'Near-Breakeven Month (Oct 2025)',
+      description: 'Profit dropped to only $12,270 (margin: 7.1%)',
+      questions: [
+        'What happened in October 2025 that caused profitability to crash?',
+        'Is this seasonal or operational?',
+        'Are fixed costs too high relative to baseline revenue?'
+      ]
+    },
+    {
+      severity: 'LOW',
+      title: 'Unpredictable Performance',
+      description: 'Recent months show no consistent trend - alternating between good and bad performance',
+      questions: [
+        'Is the business overly dependent on campaign timing?',
+        'Are there structural issues with customer retention?',
+        'What is the repeat purchase rate?'
+      ]
+    }
+  ]
+}
 
 function DealDetail() {
   const { dealId } = useParams()
@@ -20,468 +96,359 @@ function DealDetail() {
   }, [dealId])
 
   async function fetchDealDetails() {
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('flippa_deals')
-      .select('*')
-      .eq('deal_id', dealId)
-      .single()
-    
-    if (error) {
-      toast.error('Failed to load deal details')
-      console.error(error)
-    } else {
+    try {
+      const { data, error } = await supabase
+        .from('flippa_deals')
+        .select('*')
+        .eq('deal_id', dealId)
+        .single()
+      
+      if (error) throw error
       setDeal(data)
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Deal not found')
+      navigate('/')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
-  }
-
-  function formatMoney(amount) {
-    if (!amount) return '$0'
-    return `$${amount.toLocaleString()}`
-  }
-
-  function formatPercentage(value) {
-    if (!value) return '0%'
-    return `${value.toFixed(1)}%`
-  }
-
-  function getDisplayTitle(deal) {
-    const isValidTitle = (text) => {
-      if (!text) return false
-      const lowerText = text.toLowerCase().trim()
-      if (lowerText.includes('sign nda') || lowerText.includes('view more details')) return false
-      if (text.trim().length < 3) return false
-      return true
-    }
-
-    if (isValidTitle(deal.title)) return deal.title
-    if (isValidTitle(deal.business_name)) return deal.business_name
-    if (isValidTitle(deal.property_name)) return deal.property_name
-    return 'Confidential Business Listing'
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-slate-600 text-lg">Loading deal details...</p>
-        </div>
-      </div>
-    )
+    return <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>Loading...</div>
   }
 
-  if (!deal) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-2xl text-slate-800 mb-4">Deal not found</p>
-          <button
-            onClick={() => navigate('/')}
-            className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600"
-          >
-            ← Back to Deals
-          </button>
-        </div>
-      </div>
-    )
+  if (!deal) return null
+
+  const pnlData = SAMPLE_PNL[dealId] || []
+  const risks = SAMPLE_RISKS[dealId] || []
+  const hasPnL = pnlData.length > 0
+  
+  // Calculate P&L metrics if data exists
+  let pnlMetrics = null
+  if (hasPnL) {
+    const totalRevenue = pnlData.reduce((sum, m) => sum + m.revenue, 0)
+    const totalProfit = pnlData.reduce((sum, m) => sum + m.profit, 0)
+    const avgMargin = (totalProfit / totalRevenue * 100).toFixed(1)
+    
+    pnlMetrics = {
+      totalRevenue,
+      totalProfit,
+      avgMargin,
+      avgMonthlyRevenue: totalRevenue / pnlData.length,
+      avgMonthlyProfit: totalProfit / pnlData.length
+    }
   }
 
-  const profitMargin = deal.monthly_revenue && deal.monthly_profit 
-    ? (deal.monthly_profit / deal.monthly_revenue) * 100 
-    : 0
-
-  const annualRevenue = (deal.monthly_revenue || 0) * 12
-  const annualProfit = (deal.monthly_profit || 0) * 12
-  const multiple = deal.asking_price && annualProfit ? deal.asking_price / annualProfit : 0
+  const displayTitle = deal.title || deal.business_name || 'Confidential Listing'
+  const statusLabel = deal.status === 'interested' ? '✅ Marked as Interested' :
+                      deal.status === 'passed' ? '❌ Passed' :
+                      deal.status === 'nda_signed' ? '📝 NDA Signed' :
+                      '🆕 New'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header with Back Button */}
-        <div className="mb-8">
+    <div style={{ minHeight: '100vh', background: '#f8f9fa' }}>
+      {/* Header */}
+      <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '20px 24px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 bg-white text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-100 transition-colors shadow-md mb-4"
+            style={{
+              padding: '10px 20px',
+              border: 'none',
+              borderRadius: '6px',
+              background: 'rgba(255,255,255,0.2)',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
           >
             <FiArrowLeft /> Back to Deal Pipeline
           </button>
-          
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-3xl font-bold text-slate-800 mb-2">
-                  {getDisplayTitle(deal)}
-                </h1>
-                {deal.status && (
-                  <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
-                    deal.status === 'nda_signed' ? 'bg-blue-100 text-blue-800' :
-                    deal.status === 'interested' ? 'bg-green-100 text-green-800' :
-                    deal.status === 'passed' ? 'bg-red-100 text-red-800' :
-                    'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {deal.status === 'nda_signed' ? 'NDA Signed' :
-                     deal.status === 'interested' ? 'Interested' :
-                     deal.status === 'passed' ? 'Passed' :
-                     deal.status || 'Ready to Sign'}
-                  </span>
-                )}
-              </div>
-              <div className="flex gap-2">
-                {deal.flippa_url && (
-                  <a
-                    href={deal.flippa_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    <FiExternalLink /> View on Flippa
-                  </a>
-                )}
-              </div>
-            </div>
+          <a
+            href={deal.flippa_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              padding: '10px 20px',
+              border: '2px solid white',
+              borderRadius: '6px',
+              background: 'transparent',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: 500,
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            View on Flippa <FiExternalLink />
+          </a>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ maxWidth: '1200px', margin: '24px auto', padding: '0 24px' }}>
+        {/* Title & Status */}
+        <div style={{ background: 'white', padding: '24px', borderRadius: '8px', marginBottom: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', color: '#212529' }}>
+            {displayTitle}
+          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#6c757d', fontSize: '14px' }}>
+            <span style={{ 
+              padding: '4px 12px', 
+              background: deal.status === 'interested' ? '#d4edda' : 
+                         deal.status === 'passed' ? '#f8d7da' : '#d1ecf1',
+              color: deal.status === 'interested' ? '#155724' :
+                     deal.status === 'passed' ? '#721c24' : '#0c5460',
+              borderRadius: '4px',
+              fontSize: '13px',
+              fontWeight: 500
+            }}>
+              {statusLabel}
+            </span>
+            <span>•</span>
+            <span>{deal.location}</span>
+            <span>•</span>
+            <span>{deal.business_age} years old</span>
           </div>
         </div>
 
-        {/* RLGL ONE SHEET Layout - Two Column Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          
-          {/* LEFT COLUMN: Income Statement / "The Deal" */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-slate-800 mb-6 pb-3 border-b-2 border-blue-500">
-                The Deal - Income Statement
+        {/* P&L Data Section */}
+        {hasPnL && (
+          <div style={{ background: 'white', padding: '24px', borderRadius: '8px', marginBottom: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', color: '#212529' }}>
+              Profit & Loss Statement (Last 12 Months)
+            </h2>
+            
+            {/* P&L Summary Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
+              <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '6px', border: '1px solid #e9ecef' }}>
+                <div style={{ fontSize: '12px', color: '#6c757d', marginBottom: '4px' }}>Total Revenue</div>
+                <div style={{ fontSize: '24px', fontWeight: 600, color: '#0ca678' }}>
+                  ${(pnlMetrics.totalRevenue/1000).toFixed(0)}K
+                </div>
+                <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '2px' }}>
+                  Avg: ${(pnlMetrics.avgMonthlyRevenue/1000).toFixed(0)}K/mo
+                </div>
+              </div>
+              
+              <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '6px', border: '1px solid #e9ecef' }}>
+                <div style={{ fontSize: '12px', color: '#6c757d', marginBottom: '4px' }}>Total Profit</div>
+                <div style={{ fontSize: '24px', fontWeight: 600, color: '#667eea' }}>
+                  ${(pnlMetrics.totalProfit/1000).toFixed(0)}K
+                </div>
+                <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '2px' }}>
+                  Avg: ${(pnlMetrics.avgMonthlyProfit/1000).toFixed(0)}K/mo
+                </div>
+              </div>
+              
+              <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '6px', border: '1px solid #e9ecef' }}>
+                <div style={{ fontSize: '12px', color: '#6c757d', marginBottom: '4px' }}>Avg Profit Margin</div>
+                <div style={{ fontSize: '24px', fontWeight: 600, color: pnlMetrics.avgMargin > 20 ? '#0ca678' : '#ff8c42' }}>
+                  {pnlMetrics.avgMargin}%
+                </div>
+                <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '2px' }}>
+                  Over 12 months
+                </div>
+              </div>
+            </div>
+
+            {/* P&L Table */}
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
+                    <th style={{ padding: '10px', textAlign: 'left', fontWeight: 600 }}>Month</th>
+                    <th style={{ padding: '10px', textAlign: 'right', fontWeight: 600 }}>Revenue</th>
+                    <th style={{ padding: '10px', textAlign: 'right', fontWeight: 600 }}>Expenses</th>
+                    <th style={{ padding: '10px', textAlign: 'right', fontWeight: 600 }}>Profit</th>
+                    <th style={{ padding: '10px', textAlign: 'right', fontWeight: 600 }}>Margin</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pnlData.map((month, idx) => {
+                    const margin = (month.profit / month.revenue * 100).toFixed(1)
+                    return (
+                      <tr key={idx} style={{ borderBottom: '1px solid #f1f3f5' }}>
+                        <td style={{ padding: '10px', fontWeight: 500 }}>{month.month}</td>
+                        <td style={{ padding: '10px', textAlign: 'right', color: '#0ca678' }}>
+                          ${month.revenue.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '10px', textAlign: 'right', color: '#dc3545' }}>
+                          ${month.expenses.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '10px', textAlign: 'right', fontWeight: 600, color: '#667eea' }}>
+                          ${month.profit.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '10px', textAlign: 'right', fontWeight: 500, color: margin > 20 ? '#0ca678' : margin > 10 ? '#ff8c42' : '#dc3545' }}>
+                          {margin}%
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Risk Analysis Section */}
+        {risks.length > 0 && (
+          <div style={{ background: 'white', padding: '24px', borderRadius: '8px', marginBottom: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <FiAlertTriangle size={20} color='#ff8c42' />
+              <h2 style={{ margin: 0, fontSize: '20px', color: '#212529' }}>
+                Risk Analysis & Due Diligence Questions
               </h2>
-
-              {/* Key Metrics */}
-              <div className="space-y-4 mb-6">
-                <div className="grid grid-cols-3 gap-4 text-center bg-slate-50 p-4 rounded-lg">
-                  <div className="font-semibold text-sm text-slate-600">2025 (Current)</div>
-                  <div className="font-semibold text-sm text-slate-600">2024</div>
-                  <div className="font-semibold text-sm text-slate-600">2023</div>
-                </div>
-
-                <div className="border-b pb-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-semibold text-slate-700">Revenues</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div className="text-lg font-bold text-green-600">{formatMoney(annualRevenue)}</div>
-                    <div className="text-slate-400">-</div>
-                    <div className="text-slate-400">-</div>
-                  </div>
-                  <div className="text-sm text-slate-500 mt-1">Monthly: {formatMoney(deal.monthly_revenue)}</div>
-                </div>
-
-                <div className="border-b pb-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-semibold text-slate-700">Gross Profit</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div className="text-lg font-bold text-green-600">{formatMoney(annualRevenue * 0.7)}</div>
-                    <div className="text-slate-400">-</div>
-                    <div className="text-slate-400">-</div>
-                  </div>
-                  <div className="text-sm text-slate-500 mt-1">Estimated at 70% margin</div>
-                </div>
-
-                <div className="border-b pb-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-semibold text-slate-700">EBITDA</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div className="text-lg font-bold text-blue-600">{formatMoney(annualProfit)}</div>
-                    <div className="text-slate-400">-</div>
-                    <div className="text-slate-400">-</div>
-                  </div>
-                  <div className="text-sm text-slate-500 mt-1">Monthly: {formatMoney(deal.monthly_profit)}</div>
-                </div>
-
-                <div className="border-b pb-3">
-                  <span className="font-semibold text-slate-700 block mb-2">Addbacks & Takebacks</span>
-                  <div className="text-sm text-slate-500 italic">Data pending - Available after full NDA approval</div>
-                </div>
-
-                <div className="bg-blue-50 border-2 border-blue-500 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-bold text-slate-800">Adjusted EBITDA</span>
-                  </div>
-                  <div className="text-2xl font-bold text-blue-600">{formatMoney(annualProfit)}</div>
-                  <div className="text-sm text-slate-500 mt-1">Annual | Margin: {formatPercentage(profitMargin)}</div>
-                </div>
-              </div>
-
-              {/* Valuation Section */}
-              <div className="border-t-2 pt-6 space-y-3">
-                <h3 className="font-bold text-slate-800 mb-4">Valuation Analysis</h3>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-700">Average / Last 12 Months</span>
-                  <span className="font-bold text-slate-800">{formatMoney(annualProfit)}</span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-700">Multiple (Mid Point)</span>
-                  <span className="font-bold text-blue-600">{multiple.toFixed(1)}x</span>
-                </div>
-
-                <div className="flex justify-between items-center bg-green-50 p-3 rounded-lg">
-                  <span className="font-bold text-slate-800">Enterprise Value</span>
-                  <span className="text-2xl font-bold text-green-600">{formatMoney(deal.asking_price)}</span>
-                </div>
-              </div>
-
-              {/* Adjustments */}
-              <div className="border-t-2 pt-6 mt-6 space-y-3">
-                <h3 className="font-bold text-slate-800 mb-4">Adjustments</h3>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-700">Cash / NCA</span>
-                  <span className="text-slate-500 italic">Pending</span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-700">Real estate</span>
-                  <span className="text-slate-500 italic">Pending</span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-700">Less inherited debt</span>
-                  <span className="text-slate-500 italic">Pending</span>
-                </div>
-
-                <div className="flex justify-between items-center bg-blue-50 p-3 rounded-lg mt-4">
-                  <span className="font-bold text-slate-800">100% Equity Value</span>
-                  <span className="text-xl font-bold text-blue-600">{formatMoney(deal.asking_price)}</span>
-                </div>
-              </div>
-
-              {/* Working Capital */}
-              <div className="border-t-2 pt-6 mt-6 space-y-3">
-                <h3 className="font-bold text-slate-800 mb-4">Working Capital Analysis</h3>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-700">Min cash</span>
-                  <span className="text-slate-500 italic">Pending</span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-700">Cash surplus / deficit</span>
-                  <span className="text-slate-500 italic">Pending</span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-700">NCA / working capital</span>
-                  <span className="text-slate-500 italic">Pending</span>
-                </div>
-
-                <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg mt-4">
-                  <span className="font-bold text-slate-800">Total surplus (deficit)</span>
-                  <span className="text-slate-500 italic">Pending full financials</span>
-                </div>
-              </div>
             </div>
-          </div>
+            <p style={{ margin: '0 0 20px 0', fontSize: '14px', color: '#6c757d' }}>
+              LLM-based analysis of P&L data identified the following concerns and questions for the seller:
+            </p>
 
-          {/* RIGHT COLUMN: Balance Sheet / "DEALMAKER WEALTH" */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-slate-800 mb-6 pb-3 border-b-2 border-green-500">
-                Balance Sheet Analysis
-              </h2>
-
-              <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
-                <p className="text-sm font-medium text-yellow-800">
-                  ⚠️ Balance Sheet data requires full financial access
-                </p>
-                <p className="text-xs text-yellow-700 mt-1">
-                  Available after NDA approval and seller consent
-                </p>
-              </div>
-
-              {/* Assets Section */}
-              <div className="space-y-4 mb-6">
-                <h3 className="font-bold text-slate-800 mb-4 pb-2 border-b">Assets</h3>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Cash on hand</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Inventory</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-600">AR (Accounts Receivable)</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Other</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                  <div className="flex justify-between items-center bg-green-50 p-2 rounded font-semibold">
-                    <span className="text-slate-800">Current Assets</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center pt-3 border-t">
-                    <span className="text-slate-600">Real Estate</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Other Fixed Assets</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center bg-blue-50 p-3 rounded-lg font-bold mt-3">
-                    <span className="text-slate-800">Total Assets</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Liabilities Section */}
-              <div className="space-y-4 mb-6 border-t-2 pt-6">
-                <h3 className="font-bold text-slate-800 mb-4 pb-2 border-b">Liabilities</h3>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-600">AP (Accounts Payable)</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Taxes</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Accruals</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Other Current Liabilities</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                  <div className="flex justify-between items-center bg-red-50 p-2 rounded font-semibold">
-                    <span className="text-slate-800">Current Liabilities</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center pt-3 border-t">
-                    <span className="text-slate-600">Non current liabilities</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Equity Section */}
-              <div className="space-y-4 border-t-2 pt-6">
-                <h3 className="font-bold text-slate-800 mb-4 pb-2 border-b">Equity</h3>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center bg-green-50 p-3 rounded-lg font-bold">
-                    <span className="text-slate-800">Net Asset Value (Owner's Equity)</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center bg-blue-50 p-3 rounded-lg font-semibold">
-                    <span className="text-slate-800">Liquidation Value (80% of NAV)</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center pt-2">
-                    <span className="text-slate-600">Goodwill</span>
-                    <span className="text-slate-400 italic">Pending</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* RLGL Score Placeholder */}
-              <div className="border-t-2 pt-6 mt-6">
-                <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-500 rounded-lg p-6 text-center">
-                  <h3 className="text-lg font-bold text-slate-800 mb-2">RLGL Score</h3>
-                  <div className="text-4xl font-bold text-green-600 mb-2">?</div>
-                  <p className="text-sm text-slate-600">Score pending full financial review</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Additional Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Business Details */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-xl font-bold text-slate-800 mb-4 pb-3 border-b">Business Details</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-slate-600">Location</span>
-                <span className="font-semibold">{deal.location || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">Business Age</span>
-                <span className="font-semibold">{deal.business_age ? `${deal.business_age} years` : 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">Business Type</span>
-                <span className="font-semibold">{deal.business_type || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">Platform</span>
-                <span className="font-semibold">{deal.platform || 'N/A'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Notes & Highlights */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-xl font-bold text-slate-800 mb-4 pb-3 border-b">Notes & Highlights</h3>
-            {deal.notes ? (
-              <div className="prose prose-sm text-slate-700">
-                {deal.notes}
-              </div>
-            ) : (
-              <p className="text-slate-500 italic">No additional notes available</p>
-            )}
-          </div>
-        </div>
-
-        {/* Action Footer */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-bold text-slate-800">Next Steps</h3>
-              <p className="text-sm text-slate-600 mt-1">
-                {deal.status === 'nda_signed' 
-                  ? 'NDA signed - Awaiting full financial disclosure' 
-                  : 'Sign NDA to unlock complete financial details'}
-              </p>
-            </div>
-            <div className="flex gap-3">
-              {deal.nda_link && (
-                <a
-                  href={deal.nda_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-colors"
+            {risks.map((risk, idx) => {
+              const severityColor = risk.severity === 'HIGH' ? '#dc3545' :
+                                   risk.severity === 'MEDIUM' ? '#ff8c42' : '#ffc107'
+              const severityBg = risk.severity === 'HIGH' ? '#f8d7da' :
+                                risk.severity === 'MEDIUM' ? '#fff3cd' : '#fff8e1'
+              
+              return (
+                <div 
+                  key={idx} 
+                  style={{ 
+                    padding: '16px', 
+                    marginBottom: '12px', 
+                    border: `1px solid ${severityColor}20`,
+                    borderLeft: `4px solid ${severityColor}`,
+                    borderRadius: '6px',
+                    background: `${severityColor}05`
+                  }}
                 >
-                  <FiExternalLink /> Sign NDA
-                </a>
-              )}
-              {deal.flippa_url && (
-                <a
-                  href={deal.flippa_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                  <FiExternalLink /> View Full Listing
-                </a>
-              )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <span style={{ 
+                      padding: '2px 8px', 
+                      background: severityBg, 
+                      color: severityColor,
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      textTransform: 'uppercase'
+                    }}>
+                      {risk.severity}
+                    </span>
+                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#212529' }}>
+                      {risk.title}
+                    </h3>
+                  </div>
+                  <p style={{ margin: '8px 0', fontSize: '14px', color: '#495057' }}>
+                    {risk.description}
+                  </p>
+                  <div style={{ marginTop: '12px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#495057', marginBottom: '6px' }}>
+                      Questions for Seller:
+                    </div>
+                    <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                      {risk.questions.map((q, qIdx) => (
+                        <li key={qIdx} style={{ fontSize: '13px', color: '#495057', marginBottom: '4px' }}>
+                          {q}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Basic Deal Info */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+          <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#212529', fontWeight: 600 }}>
+              Key Metrics
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid #f1f3f5' }}>
+                <span style={{ color: '#6c757d', fontSize: '14px' }}>Asking Price</span>
+                <span style={{ fontWeight: 600, fontSize: '14px' }}>${(deal.asking_price/1000).toFixed(0)}K</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid #f1f3f5' }}>
+                <span style={{ color: '#6c757d', fontSize: '14px' }}>Monthly Revenue</span>
+                <span style={{ fontWeight: 600, fontSize: '14px', color: '#0ca678' }}>${(deal.monthly_revenue/1000).toFixed(0)}K</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '8px', borderBottom: '1px solid #f1f3f5' }}>
+                <span style={{ color: '#6c757d', fontSize: '14px' }}>Monthly Profit</span>
+                <span style={{ fontWeight: 600, fontSize: '14px', color: '#667eea' }}>${(deal.monthly_profit/1000).toFixed(0)}K</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#6c757d', fontSize: '14px' }}>Profit Margin</span>
+                <span style={{ fontWeight: 600, fontSize: '14px' }}>
+                  {deal.monthly_revenue > 0 ? ((deal.monthly_profit / deal.monthly_revenue) * 100).toFixed(1) : 0}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ background: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#212529', fontWeight: 600 }}>
+              Actions
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <a
+                href={deal.nda_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: '12px 20px',
+                  background: '#667eea',
+                  color: 'white',
+                  borderRadius: '6px',
+                  textAlign: 'center',
+                  textDecoration: 'none',
+                  fontSize: '14px',
+                  fontWeight: 500
+                }}
+              >
+                Sign NDA
+              </a>
+              <a
+                href={deal.flippa_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  padding: '12px 20px',
+                  background: 'white',
+                  color: '#667eea',
+                  border: '1px solid #667eea',
+                  borderRadius: '6px',
+                  textAlign: 'center',
+                  textDecoration: 'none',
+                  fontSize: '14px',
+                  fontWeight: 500
+                }}
+              >
+                View Full Listing
+              </a>
             </div>
           </div>
         </div>
+
+        {/* Notes */}
+        {deal.notes && (
+          <div style={{ background: 'white', padding: '20px', borderRadius: '8px', marginTop: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#212529', fontWeight: 600 }}>
+              Highlights
+            </h3>
+            <p style={{ margin: 0, fontSize: '14px', color: '#495057', lineHeight: '1.6' }}>
+              {deal.notes}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )
